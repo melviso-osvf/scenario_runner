@@ -20,6 +20,9 @@
     - Added WaitUntilInFront behavior and InTimeToArrivalToVehicleSideLane trigger condition, useful for cut ins
     - Added new trigger condition, AtRightestLane, which checks if the actor is at the rightmost driving lane
 * Setting up actors in batch now also randomizes their colors
+* **Important** All challenge related content has been removed. This functionality has been improved and is now part of the [Leaderboard](https://github.com/carla-simulator/leaderboard). As a consequence:
+    - The path to the autoagents has changed from .../challenge/autoagents to .../autoagents
+    - The path to the route and scenario descriptions has changed from .../challenge to .../data
 
 ### :bug: Bug Fixes
 * Fixed spawning bugs for scenario DynamicObjectCrossing when it is part of a route
