@@ -19,6 +19,7 @@
     - ChangeAutopilot now calls a TM instance, and allows to change its parameters
     - Added WaitUntilInFront behavior and InTimeToArrivalToVehicleSideLane trigger condition, useful for cut ins
     - Added new trigger condition, AtRightestLane, which checks if the actor is at the rightmost driving lane
+    - Added new criteria, ActorSpeedAboveThresholdTest, useful to check if the ego vehicle has been standing still for long periods of time.
 * Setting up actors in batch now also randomizes their colors
 * **Important** All challenge related content has been removed. This functionality has been improved and is now part of the [Leaderboard](https://github.com/carla-simulator/leaderboard). As a consequence:
     - The path to the autoagents has changed from .../challenge/autoagents to .../autoagents
@@ -31,6 +32,7 @@
 * Fixed bug when setting up actors in batch causing to ignore the spawn points given.
 * Fixed bug where CollisionTest was counting as multiple hits collisions that displaced the actor for a long distance.
 * Fixed bug causing the simulation to end after running in synchronous mode
+* Fixed bug when using the WaypointFollower atomic to create new LocalPlanners for on-the-fly created actors (#502)
 
 ## CARLA ScenarioRunner 0.9.8
 ### :rocket: New Features
