@@ -10,8 +10,6 @@ from sys import platform
 class extra_install(install):
     """Extra operations required for install"""
  	
-    user_options = install.user_options + [('reinstall-wxpython', None, 'rebuild and reinstall wxpython')]
-
     def initialize_options(self):
         super(extra_install, self).initialize_options()
 
@@ -30,20 +28,28 @@ with open(path.join(path.dirname(__file__),"requirements.txt"), "r") as f:
     required = f.read().splitlines()
 
 setuptools.setup(
-    name='scenario_runner',  
+    # general info
+    name="scenario_runner",  
     version='0.9.8',
     author="carla team",
+    license='MIT',
     author_email="carla.simulator@gmail.com",
     description="ScenarioRunner for CARLA",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/carla-simulator/scenario_runner",
-    packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    # - main modules -
+    py_modules=["manual_control", "no_rendering_mode", "scenario_runner"],
+    # - packages -
+    packages=setuptools.find_packages("."),
+    # - extra data
+    include_package_data=True,
+    # - requirements 
     install_requires=required,
     python_requires='>=3.5',
     cmdclass={'install': extra_install},
