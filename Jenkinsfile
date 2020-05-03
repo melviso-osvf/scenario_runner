@@ -1,8 +1,11 @@
 pipeline {
+
   agent any
+
   stages {
+
     stage('build nodes') {
-      steps {
+
       	docker.image('ubuntu:18.04').inside{
 	sh 'apt-get update && apt-get install --no-install-recommends -y python3.6 python3-pip build-essential'
 	sh 'apt-get install --no-install-recommends -y git'
@@ -16,7 +19,6 @@ pipeline {
         sh '/app/scenario_runner'
 	sh 'export PYTHONPATH="${PYTHONPATH}:/app/carla/agents:/app/carla" && python3.6 scenario_runner --scenario group:FollowLeadingVehicle"'
 	}
-      }
     }
 
   }
