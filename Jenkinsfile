@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('build nodes') {
       steps {
-      	docker.imagen('ubuntu:18.04').inside{
+      	docker.image('ubuntu:18.04').inside{
 	sh 'apt-get update && apt-get install --no-install-recommends -y python3.6 python3-pip build-essential'
 	sh 'apt-get install --no-install-recommends -y git'
         sh 'apt-get install --no-install-recommends -y python3-dev'
