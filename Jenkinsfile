@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('build nodes') {
       steps {
-      	docker.imagen('ubuntu:18.04').inside(
+      	docker.imagen('ubuntu:18.04').inside{
 	sh 'apt-get update && apt-get install --no-install-recommends -y python3.6 python3-pip build-essential'
 	sh 'apt-get install --no-install-recommends -y git'
         sh 'apt-get install --no-install-recommends -y python3-dev'
@@ -14,7 +14,8 @@ pipeline {
         sh 'sh /app/dist/carla-0.9.8-py3.5-linux-x86_64.egg'
         sh 'export PYTHONPATH="${PYTHONPATH}:/app/carla/agents:/app/carla"'
         sh '/app/scenario_runner'
-	sh 'export PYTHONPATH="${PYTHONPATH}:/app/carla/agents:/app/carla" && python3.6 scenario_runner --scenario group:FollowLeadingVehicle"')
+	sh 'export PYTHONPATH="${PYTHONPATH}:/app/carla/agents:/app/carla" && python3.6 scenario_runner --scenario group:FollowLeadingVehicle"'
+	}
       }
     }
 
