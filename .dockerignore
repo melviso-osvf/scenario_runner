@@ -1,0 +1,12 @@
+# ignored files for docker image build
+Dockerfile
+Jenkinsfile
+.Docs/*
+*.h
+*.cpp
+*.sh
+*.md
+*.sh
+*.yml
+*.txt
+

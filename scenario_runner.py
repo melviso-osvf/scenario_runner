@@ -563,6 +563,6 @@ def main():
 
 
 if __name__ == "__main__":
-    this_dir = os.path.split(__file__)[0]
+    this_dir = os.path.split(os.path.realpath(__file__))[0]
     os.chdir(this_dir)
     sys.exit(main())
