@@ -59,7 +59,7 @@ pipeline
                 {
                     JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    # jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
+                    sh 'jenkinsLib.DeleteUbuntuTestNode(JOB_ID)'
                 }
             }
         }
