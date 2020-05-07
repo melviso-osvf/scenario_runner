@@ -30,9 +30,12 @@ pipeline
                 {
                     steps
                     {
-                        JOB_ID = "${env.BUILD_TAG}"
-                        jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                        jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                        script
+                        {
+                            JOB_ID = "${env.BUILD_TAG}"
+                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                            jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                        }
                     }
                 }
             }
