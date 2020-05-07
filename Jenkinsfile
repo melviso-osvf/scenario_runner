@@ -37,7 +37,7 @@ pipeline
                     }
                 }
             }
-            stage('carla install)
+            stage('carla install')
             {
                 agent { label "ubuntu && build && ${JOB_ID}" }
                 steps
