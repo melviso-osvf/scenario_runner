@@ -19,7 +19,6 @@ pipeline
             {
                 stage('Building image')
                 {
-                    agent { label "master" }
                     steps
                     {
                         checkout scm
@@ -31,7 +30,6 @@ pipeline
                 }
                 stage('Creating test node') 
                 {
-                    agent { label "master" }
                     steps
                     {
                         script
