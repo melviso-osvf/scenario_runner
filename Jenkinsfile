@@ -7,19 +7,22 @@ pipeline
     options
     {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+        skipDefaultCheckout()
     }
 
     stages
     {
         stage('Deploy')
         {
-            parallel
+            agent { label "master" }
+            stages
             {
                 stage('Building image')
                 {
                     agent { label "master" }
                     steps
                     {
+                        checkout scm
                         sh 'docker build -t jenkins/scenario_runner .'
                         sh 'docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
                         sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
