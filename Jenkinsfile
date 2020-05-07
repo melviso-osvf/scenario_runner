@@ -13,11 +13,11 @@ pipeline
     {
         stage('Deploy')
         {
-            agent { label "master" }
             parallel
             {
                 stage('Building image')
                 {
+                    agent { label "master" }
                     steps
                     {
                         sh 'docker build -t jenkins/scenario_runner .'
@@ -28,6 +28,7 @@ pipeline
                 }
                 stage('Creating test node') 
                 {
+                    agent { label "master" }
                     steps
                     {
                         script
