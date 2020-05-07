@@ -33,7 +33,7 @@ pipeline
                 {
                     JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                    sh 'jenkinsLib.CreateUbuntuTestNode(JOB_ID)'
                 }
             }
         }
