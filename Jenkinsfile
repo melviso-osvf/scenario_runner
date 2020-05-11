@@ -57,9 +57,8 @@ pipeline
                         jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
                         jenkinsLib.StopUbuntuTestNode()
                     }
- 		    
+		    deleteDir()
                 }
-                deleteDir()
         }
    }
 }
