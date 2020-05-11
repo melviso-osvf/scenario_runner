@@ -12,6 +12,7 @@ pipeline
 
     stages
     {
+        /** commented while testing setup of test node
         stage('Building image')
         {
             agent { label "master" }
@@ -24,6 +25,7 @@ pipeline
                 sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
             }
         }
+        **/
         stage('Setup test node') 
         {
             agent { label "master" }
