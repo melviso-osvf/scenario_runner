@@ -24,7 +24,7 @@ pipeline
                 sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
             }
         }
-        stage('Creating test node') 
+        stage('Setup test node') 
         {
             agent { label "master" }
             steps
@@ -33,7 +33,7 @@ pipeline
                 {
                     JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                    jenkinsLib.StartUbuntuTestNode(JOB_ID)
                 }
             }
         }
