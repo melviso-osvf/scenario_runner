@@ -33,15 +33,14 @@ pipeline
             {
                 script
                 {
-                    JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.StartUbuntuTestNode(JOB_ID)
+                    jenkinsLib.StartUbuntuTestNode()
                 }
             }
         }
         stage('carla install')
         {
-            agent { label "ubuntu && build && ${JOB_ID}" }
+            agent { label "slave && ubuntu && gpu && sr" }
             steps
             {
                 script
