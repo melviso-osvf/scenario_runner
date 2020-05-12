@@ -66,8 +66,7 @@ pipeline
             agent { label "slave && ubuntu && gpu && sr" }
             steps
             {
-                println "get $CARLA_HOST/$CARLA_RELEASE.tar.gz"
-                sh 'wget -qO- $CARLA_HOST/$CARLA_RELEASE.tar.gz | tar -xzv -C Dist/'
+                sh 'wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C Dist/'
                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                 sh 'make smoke_tests ARGS="--xml"'
                 sh 'make run-examples ARGS="localhost 3654"'
