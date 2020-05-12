@@ -78,20 +78,19 @@ pipeline
                     }
                 }
             }
-            
-        }
-        post
-        {
-            always
+            post
             {
-                node('master')
+                always
                 {
-                    script  
+                    node('master')
                     {
-                        jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                        jenkinsLib.StopUbuntuTestNode()
+                        script  
+                        {
+                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                            jenkinsLib.StopUbuntuTestNode()
+                        }
+                        deleteDir()
                     }
-                    deleteDir()
                 }
             }
         }
