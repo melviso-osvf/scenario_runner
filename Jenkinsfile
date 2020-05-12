@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
-def CARLA_HOST 
-def CARLA_RELEASE
+String CARLA_HOST 
+String CARLA_RELEASE
 
 pipeline
 {
@@ -23,12 +23,12 @@ pipeline
                 checkout scm
                 script
                 {
-                    CARLA_HOST= new String(sh(
+                    CARLA_HOST= sh(
                         script: "cat ./CARLA_VER | grep HOST | sed 's/HOST\\s*=\\s*//g'",
-                        returnStdout: true).trim())
-                    CARLA_RELEASE = new String(sh(
+                        returnStdout: true).trim()
+                    CARLA_RELEASE = sh(
                         script: "cat ./CARLA_VER | grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
-                        returnStdout: true).trim())
+                        returnStdout: true).trim()
                 }
                 println "using CARLA version ${CARLA_RELEASE}"
             }
@@ -90,7 +90,7 @@ pipeline
                 script  
                 {
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.StopUbuntuTestNode()
+                    //jenkinsLib.StopUbuntuTestNode()
                 }
                 deleteDir()
             }
