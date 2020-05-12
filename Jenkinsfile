@@ -23,11 +23,11 @@ pipeline
                 checkout scm
                 script
                 {
-                    CARLA_HOST=String(sh(
-                        script: "cat ./CARLA_VER|grep HOST | sed 's/HOST\\s*=\\s*//g'",
+                    CARLA_HOST= new String(sh(
+                        script: "cat ./CARLA_VER | grep HOST | sed 's/HOST\\s*=\\s*//g'",
                         returnStdout: true).trim())
-                    CARLA_RELEASE=String(sh(
-                        script: "cat ./CARLA_VER|grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
+                    CARLA_RELEASE = new String(sh(
+                        script: "cat ./CARLA_VER | grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
                         returnStdout: true).trim())
                 }
                 println "using CARLA version ${CARLA_RELEASE}"
