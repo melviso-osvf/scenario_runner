@@ -47,37 +47,32 @@ pipeline
             }
         }
         **/
-        stage('test') 
+        stage('start server')
         {
-            stages
+            agent { label "master" }
+            steps
             {
-                stage('start server')
+                println "start server node"
+                script
                 {
-                    agent { label "master" }
-                    steps
-                    {
-                        println "start server node"
-                        script
-                        {
-                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                            jenkinsLib.StartUbuntuTestNode()
-                            sh 'echo server started!'
-                        }
-                    }
-                }
-                stage('deploy carla')
-                {
-                    agent { label "slave && ubuntu && gpu && sr" }
-                    steps
-                    {
-                        println "get $CARLA_RELEASE"
-                        sh "wget -qO- $CARLA_HOST/$CARLA_RELEASE.tar.gz | tar -xzv -C Dist/"
-                        sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                        sh 'make smoke_tests ARGS="--xml"'
-                        sh 'make run-examples ARGS="localhost 3654"'
-                    }
+                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    jenkinsLib.StartUbuntuTestNode()
+                    sh 'echo server started!'
                 }
             }
+        }
+        stage('deploy carla')
+        {
+            agent { label "slave && ubuntu && gpu && sr" }
+            steps
+            {
+                println "get $CARLA_RELEASE"
+                sh "wget -qO- $CARLA_HOST/$CARLA_RELEASE.tar.gz | tar -xzv -C Dist/"
+                sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                sh 'make smoke_tests ARGS="--xml"'
+                sh 'make run-examples ARGS="localhost 3654"'
+            }
+        }
             /**
             post
             {
@@ -94,6 +89,5 @@ pipeline
                     }
                 }
             }**/
-        }
     }
 }
