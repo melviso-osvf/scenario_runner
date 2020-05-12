@@ -21,10 +21,10 @@ pipeline
 	    {
 		checkout scm
 		CARLA_HOST=sh(
-			script: "cat ./CARLA_VER|grep HOST|sed 's/HOST\\s*=\\s*//g'",
+			script: "cat ./CARLA_VER|grep HOST|sed 's/\\s//g'|sed 's/HOST\\s*=\\s*//g'",
 			returnStdout: true).trim()
 		CARLA_RELEASE=sh(
-			script: "cat /app/scenario_runner/CARLA_VER|grep RELEASE|sed 's/RELEASE\\s*=\\s*//g'",
+			script: "cat /app/scenario_runner/CARLA_VER|grep RELEASE|sed 's/\\s//g'|sed 's/RELEASE\\s*=\\s*//g'",
 			returnStdout: true).trim()
 		println 'echo "selected CARLA version ${CARLA_RELEASE}"
 	    }
