@@ -67,9 +67,9 @@ pipeline
             steps
             {
                 println "using CARLA version ${CARLA_RELEASE}"
-                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C Dist/"
+                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv "
                 //sh 'wget -qO- '+CARLA_HOST+'/'+CARLA_RELEASE+'.tar.gz | tar -xzv -C Dist/'
-                sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                 sh 'make smoke_tests ARGS="--xml"'
                 sh 'make run-examples ARGS="localhost 3654"'
             }
