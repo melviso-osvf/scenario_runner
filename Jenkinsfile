@@ -1,5 +1,8 @@
 #!/usr/bin/env groovy
 
+def CARLA_HOST 
+def CARLA_RELEASE
+
 pipeline
 {
     agent none
@@ -12,6 +15,16 @@ pipeline
 
     stages
     {
+	stage('Init environment')
+	{
+	    script
+	    {
+		checkout scm
+		CARLA_HOST="$(cat ./CARLA_VER|grep HOST|sed 's/HOST\\s*=\\s*//g')"
+		CARLA_RELEASE="$(cat /app/scenario_runner/CARLA_VER|grep RELEASE|sed 's/RELEASE\\s*=\\s*//g')"
+		println 'echo "selected CARLA version ${CARLA_RELEASE}"
+	    }
+        }
         /** commented while testing setup of test node
         stage('Building image')
         {
