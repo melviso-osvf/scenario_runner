@@ -73,19 +73,19 @@ pipeline
                 sh 'make run-examples ARGS="localhost 3654"'
             }
         }
-        post
+    }
+    post
+    {
+        always
         {
-            always
+            node('master')
             {
-                node('master')
+                script  
                 {
-                    script  
-                    {
-                        jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                        jenkinsLib.StopUbuntuTestNode()
-                    }
-                    deleteDir()
+                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    jenkinsLib.StopUbuntuTestNode()
                 }
+                deleteDir()
             }
         }
     }
