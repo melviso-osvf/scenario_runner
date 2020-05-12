@@ -61,7 +61,7 @@ pipeline
                         {
                             jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
                             jenkinsLib.StartUbuntuTestNode()
-                            sh 'print server started!'
+                            sh 'echo server started!'
                         }
                     }
                 }
