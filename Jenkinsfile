@@ -25,6 +25,7 @@ pipeline
                 script
                 {
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    TEST_HOST = jenkinsLib.getUbuntuTestNodeHost()
                     CARLA_HOST= sh(
                         script: "cat ./CARLA_VER | grep HOST | sed 's/HOST\\s*=\\s*//g'",
                         returnStdout: true).trim()
@@ -32,10 +33,10 @@ pipeline
                         script: "cat ./CARLA_VER | grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
                         returnStdout: true).trim()
                 }
-                println "using CARLA version ${CARLA_RELEASE}"
+                println "using CARLA version ${CARLA_RELEASE} on ${TEST_HOST}"
             }
         }
-        stage('build SR image')
+        stage('build docker image')
         {
             agent { label "master" }
             steps
@@ -47,7 +48,7 @@ pipeline
                 sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
             }
         }
-        stage('deploy SR')
+        stage('deploy & test')
         {
             stages
             {
