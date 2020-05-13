@@ -33,7 +33,7 @@ pipeline
                         script: "cat ./CARLA_VER | grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
                         returnStdout: true).trim()
                 }
-                println "using CARLA version ${CARLA_RELEASE} on ${TEST_HOST}"
+                println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
         }
         stage('build docker image')
@@ -104,11 +104,9 @@ pipeline
                             {
                                 script
                                 {
-                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                                    TEST_HOST = jenkinsLib.getUbuntuTestNodeHost()
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                                     sh 'docker container prune -f'
-                                    sh 'docker container run --rm "jenkins/scenario_runner" -c "cd /app/scenario_runner && python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --port 3654 --debug --stdout"'
+                                    sh "docker container run --rm \"jenkins/scenario_runner\" -c \"cd /app/scenario_runner && python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --port 3654 --debug --stdout\""
                                 }
                             }
                         }
