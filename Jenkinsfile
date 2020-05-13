@@ -91,7 +91,7 @@ pipeline
                             }
                             steps
                             {
-                                sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log'
                             }
                         }
                         stage('basic test')
