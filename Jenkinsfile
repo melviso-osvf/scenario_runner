@@ -100,16 +100,11 @@ pipeline
         {
             node('master')
             {
-                stages
+                script
                 {
-                    stage('store docker image')
-                    {
-                        steps
-                        {
-                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                            sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
-                        }
-                    }
+                    echo 'store docker image'
+                    sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                    sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
                 }
             }
         }
