@@ -6,7 +6,7 @@ run apt-get update && apt-get install --no-install-recommends -y \
 
 # Install python requirements
 run pip3 install --user setuptools wheel && pip3 install py_trees==0.8.3 networkx==2.2 pygame==1.9.6 \
-    six==1.14.0 numpy==1.18.4 psutil shapely xmlschema \
+    six==1.14.0 numpy==1.18.4 psutil shapely xmlschema ephem \
 && mkdir -p /app/scenario_runner
 
 # Install scenario_runner 
