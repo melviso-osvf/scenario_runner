@@ -25,7 +25,6 @@ pipeline
                 script
                 {
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    TEST_HOST = jenkinsLib.getUbuntuTestNodeHost()
                     CARLA_HOST= sh(
                         script: "cat ./CARLA_VER | grep HOST | sed 's/HOST\\s*=\\s*//g'",
                         returnStdout: true).trim()
@@ -102,6 +101,8 @@ pipeline
                             }                            
                             steps
                             {
+                                jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                                TEST_HOST = jenkinsLib.getUbuntuTestNodeHost()
                                 sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                                 sh 'docker container prune -f'
                                 sh 'docker container run --rm "jenkins/scenario_runner" -c "cd /app/scenario_runner && python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host $TEST_HOST --port 3654 --debug --stdout"'
