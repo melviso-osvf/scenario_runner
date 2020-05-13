@@ -41,7 +41,7 @@ pipeline
             agent { label "master" }
             steps
             {
-                checkout scm
+                //checkout scm
                 sh 'docker build -t jenkins/scenario_runner .'
                 sh 'docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
                 //sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
@@ -52,15 +52,30 @@ pipeline
         {
             stages
             {
-                stage('start CARLA node')
+                stage('start CARLA')
                 {
-                    agent { label "master" }
-                    steps
+                    stages
                     {
-                        script
+                        stage('start test node')
                         {
-                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                            jenkinsLib.StartUbuntuTestNode()
+                            agent { label "master" }
+                            steps
+                            {
+                                script
+                                {
+                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                                    jenkinsLib.StartUbuntuTestNode()
+                                }
+                            }
+                        }
+                        stage('install CARLA')
+                        {
+                            agent { label "slave && ubuntu && gpu && sr" }
+                            steps
+                            {
+                                println "using CARLA version ${CARLA_RELEASE}"
+                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
+                            }
                         }
                     }
                 }
@@ -76,8 +91,6 @@ pipeline
                             }
                             steps
                             {
-                                println "using CARLA version ${CARLA_RELEASE}"
-                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
                                 sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                             }
                         }
@@ -116,6 +129,7 @@ pipeline
                 {
                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
                     jenkinsLib.StopUbuntuTestNode()
+                    echo 'test node stopped'
                 }
                 deleteDir()
             }
