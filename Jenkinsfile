@@ -64,35 +64,29 @@ pipeline
                         }
                     }
                 }
-            }
-            post
-            {
-                success
+                stage('run tests')
                 {
-                    stages
+                    parallel
                     {
-                        stage('run tests')
+                        stage('deploy carla')
                         {
-                            parallel
+                            agent { label "slave && ubuntu && gpu && sr" }
+                            options {
+                                timeout(time: 10, unit: 'MINUTES') 
+                            }
+                            steps
                             {
-                                stage('deploy carla')
-                                {
-                                    agent { label "slave && ubuntu && gpu && sr" }
-                                    steps
-                                    {
-                                        println "using CARLA version ${CARLA_RELEASE}"
-                                        sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                                        sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                    }
-                                }
-                                stage('basic test')
-                                {
-                                    agent { docker { image 'jenkins/scenario_runner' }}
-                                    steps
-                                    {
-                                        sh 'python scenario_runner.py --scenario FollowLeadingVehicle_1 --host $TEST_HOST --port 3654 --debug --stdout'
-                                    }
-                                }
+                                println "using CARLA version ${CARLA_RELEASE}"
+                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                            }
+                        }
+                        stage('basic test')
+                        {
+                            agent { docker { image 'jenkins/scenario_runner' }}
+                            steps
+                            {
+                                sh 'python scenario_runner.py --scenario FollowLeadingVehicle_1 --host $TEST_HOST --port 3654 --debug --stdout'
                             }
                         }
                     }
