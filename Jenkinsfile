@@ -106,8 +106,21 @@ pipeline
                                 {
                                     sh 'sleep 10'
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                    sh 'docker container prune -f'
                                     sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
+                                }
+                                def remote = [:]
+                                remote.name = "node"
+                                remote.host = "${TEST_HOST}"
+                                remote.allowAnyHosts = true
+
+                                node {
+                                    withCredentials("jenkins2") {
+                                        remote.user = jenkins
+                                        stage("SSH Steps Rocks!") {
+                                            writeFile file: 'test.sh', text: 'ls'
+                                            sshCommand remote: remote, command: 'sudo killall python3'
+                                        }
+                                    }
                                 }
                                 script
                                 {
