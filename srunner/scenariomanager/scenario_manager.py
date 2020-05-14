@@ -65,7 +65,7 @@ class Scenario(object):
         if behavior is not None:
             self.scenario_tree.add_child(self.behavior)
         self.scenario_tree.add_child(self.timeout_node)
-        # self.scenario_tree.add_child(WeatherBehavior())
+        self.scenario_tree.add_child(WeatherBehavior())
         if criteria is not None:
             self.scenario_tree.add_child(self.criteria_tree)
         self.scenario_tree.setup(timeout=1)
