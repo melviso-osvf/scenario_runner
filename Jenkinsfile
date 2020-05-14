@@ -37,27 +37,27 @@ pipeline
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
         }
-        stage('build docker image')
+        stage('deploy')
         {
-            agent { label "master" }
-            steps
+            parallel
             {
-                //checkout scm
-                sh 'docker build -t jenkins/scenario_runner .'
-                sh 'docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
-                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
-            }
-        }
-        stage('deploy & test')
-        {
-            stages
-            {
-                stage('start CARLA')
+                stage('build SR docker image')
+                {
+                    agent { label "master" }
+                    steps
+                    {
+                        //checkout scm
+                        sh 'docker build -t jenkins/scenario_runner .'
+                        sh 'docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
+                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                        sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
+                    }
+                }
+                stage('deploy CARLA')
                 {
                     stages
                     {
-                        stage('start test node')
+                        stage('start server')
                         {
                             agent { label "master" }
                             steps
@@ -80,6 +80,12 @@ pipeline
                         }
                     }
                 }
+            }
+        }
+        stage('test')
+        {
+            stages
+            {
                 stage('run tests')
                 {
                     parallel
