@@ -93,9 +93,9 @@ pipeline
                             steps
                             {
                                 sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                                CARLA_RUNNING = true
                                 script
                                 {
+                                    CARLA_RUNNING = true
                                     while ( CARLA_RUNNING ) {
                                         sleep 10
                                     }
