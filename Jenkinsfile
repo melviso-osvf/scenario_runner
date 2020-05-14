@@ -90,7 +90,7 @@ pipeline
                 {
                     parallel
                     {
-                        stage('deploy carla')
+                        stage('run carla')
                         {
                             agent { label "slave && ubuntu && gpu && sr" }
                             options {
