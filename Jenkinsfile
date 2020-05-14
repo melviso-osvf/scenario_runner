@@ -3,6 +3,7 @@
 String CARLA_HOST 
 String CARLA_RELEASE
 String TEST_HOST
+boolean CARLA_RUNNING = false
 
 pipeline
 {
@@ -91,7 +92,15 @@ pipeline
                             }
                             steps
                             {
-                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log'
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+                                CARLA_RUNNING = true
+                                script
+                                {
+                                    while ( CARLA_RUNNING ) {
+                                        sleep 10
+                                    }
+                                }
+                                println 'ending CARLA'
                             }
                         }
                         stage('basic test')
@@ -107,29 +116,14 @@ pipeline
                                     sh 'sleep 10'
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                                     sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
+                                    CARLA_RUNNING = false
                                 }
-                                script
-                                {
-                                    def remote = [:]
-                                    remote.name = "node"
-                                    remote.host = "${TEST_HOST}"
-                                    remote.allowAnyHosts = true
-
-                                    node {
-                                        withCredentials("jenkins2") {
-                                            remote.user = jenkins
-                                            stage("SSH Steps Rocks!") {
-                                                writeFile file: 'test.sh', text: 'ls'
-                                                sshCommand remote: remote, command: 'sudo killall python3'
-                                            }
-                                        }
-                                    }
-                                }
+                                /*
                                 script
                                 {
                                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
                                     jenkinsLib.StopUbuntuTestNode()
-                                }
+                                }*/
                             }
                         }
                     }
