@@ -109,6 +109,11 @@ pipeline
                                     sh 'docker container prune -f'
                                     sh "docker container run --rm --network host \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
                                 }
+                                script
+                                {
+                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                                    jenkinsLib.StopUbuntuTestNode()
+                                }
                             }
                         }
                     }
@@ -124,9 +129,10 @@ pipeline
             {
                 script  
                 {
-                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.StopUbuntuTestNode()
+                    // jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    // jenkinsLib.StopUbuntuTestNode()
                     echo 'test node stopped'
+                    sh 'docker system prune --volumes -f'
                 }
                 deleteDir()
             }
