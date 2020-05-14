@@ -107,7 +107,7 @@ pipeline
                                     sh 'sleep 10'
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                                     sh 'docker container prune -f'
-                                    sh "docker container run --rm --network host \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
+                                    sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
                                 }
                                 script
                                 {
