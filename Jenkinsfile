@@ -100,6 +100,7 @@ pipeline
                                         sleep 10
                                     }
                                 }
+                                deleteDir()
                                 println 'ending CARLA'
                             }
                         }
@@ -118,12 +119,6 @@ pipeline
                                     sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
                                     CARLA_RUNNING = false
                                 }
-                                /*
-                                script
-                                {
-                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                                    jenkinsLib.StopUbuntuTestNode()
-                                }*/
                             }
                         }
                     }
@@ -139,8 +134,8 @@ pipeline
             {
                 script  
                 {
-                    // jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    // jenkinsLib.StopUbuntuTestNode()
+                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    jenkinsLib.StopUbuntuTestNode()
                     echo 'test node stopped'
                     sh 'docker system prune --volumes -f'
                 }
