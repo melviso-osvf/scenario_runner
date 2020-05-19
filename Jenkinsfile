@@ -93,52 +93,20 @@ pipeline
                 }
             }
         }
-        stage('test')
+        stage('run test')
         {
-            stages
-            {
-                stage('run tests')
+        	agent { label "slave && ubuntu && gpu && sr" }
+                steps
                 {
-                    parallel
-                    {
-                        stage('run carla')
+                	sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+			sleep 10
+                        script
                         {
-                            agent { label "slave && ubuntu && gpu && sr" }
-                            options {
-                                timeout(time: 10, unit: 'MINUTES') 
-                            }
-                            steps
-                            {
-                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                                script
-                                {
-                                    CARLA_RUNNING = true
-                                    while ( CARLA_RUNNING ) {
-                                        sleep 10
-                                    }
-                                }
+                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+				sh "docker pull 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
+                                sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
                                 deleteDir()
-                                println 'ending CARLA'
-                            }
                         }
-                        stage('basic test')
-                        {
-                            agent { label "master"}
-                            options {
-                                timeout(time: 10, unit: 'MINUTES') 
-                            }                            
-                            steps
-                            {
-                                script
-                                {
-                                    sh 'sleep 10'
-                                    sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                    sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --host ${TEST_HOST} --debug --output --reloadWorld \""
-                                    CARLA_RUNNING = false
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
