@@ -13,6 +13,7 @@ String CARLA_HOST
 String CARLA_RELEASE
 String TEST_HOST
 String COMMIT
+String ECR_REPOSITORY = "456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner"
 boolean CARLA_RUNNING = false
 
 pipeline
@@ -59,9 +60,9 @@ pipeline
                     {
                         //checkout scm
                         sh 'docker build -t jenkins/scenario_runner .'
-                        sh "docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
+                        sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
                         sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                        sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
+                        sh "docker push ${ECR_REPOSITORY}"
                     }
                 }
                 stage('deploy CARLA')
@@ -103,8 +104,8 @@ pipeline
                 script
                 {
                         sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                        sh "docker pull 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
-                        sh "docker container run --rm --network host -e LANG=C.UTF-8 \"scenario_runner:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                        sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
+                        sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
                         deleteDir()
                 }
             }
