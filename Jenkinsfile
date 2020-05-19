@@ -1,8 +1,18 @@
 #!/usr/bin/env groovy
 
+/**
+	Version 2 
+	---------
+
+	This version deploys scenario runner from the just
+	stored image in a ECR repository
+
+**/
+
 String CARLA_HOST 
 String CARLA_RELEASE
 String TEST_HOST
+String COMMIT
 boolean CARLA_RUNNING = false
 
 pipeline
@@ -33,6 +43,7 @@ pipeline
                     CARLA_RELEASE = sh(
                         script: "cat ./CARLA_VER | grep RELEASE | sed 's/RELEASE\\s*=\\s*//g'",
                         returnStdout: true).trim()
+		    COMMIT = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
                 }
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
@@ -48,7 +59,7 @@ pipeline
                     {
                         //checkout scm
                         sh 'docker build -t jenkins/scenario_runner .'
-                        sh 'docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
+                        sh "docker tag jenkins/scenario_runner 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
                         sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                         sh 'docker push 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner'
                     }
