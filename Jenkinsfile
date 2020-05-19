@@ -96,17 +96,16 @@ pipeline
         stage('run test')
         {
         	agent { label "slave && ubuntu && gpu && sr" }
-                steps
+            steps
+            {
+                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+        sleep 10
+                script
                 {
-                	sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-			sleep 10
-                        script
-                        {
-                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-				sh "docker pull 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
-                                sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
-                                deleteDir()
-                        }
+                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                        sh "docker pull 456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_runner:${COMMIT}"
+                        sh "docker container run --rm --network host -e LANG=C.UTF-8 \"jenkins/scenario_runner\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                        deleteDir()
                 }
             }
         }
