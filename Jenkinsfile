@@ -66,7 +66,7 @@ pipeline
                 {
                     if ( CONCURRENCY == true )
                     {
-                        println "concurrent builds detected, prebuild SR image."
+                        println "concurrent builds detected, prebuilding SR image."
                         stage('prebuild SR docker image')
                         {
                             agent { label "master" }
