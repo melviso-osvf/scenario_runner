@@ -9,6 +9,8 @@ String ECR_REPOSITORY = "456841689987.dkr.ecr.eu-west-3.amazonaws.com/scenario_r
 boolean CARLA_RUNNING = false
 boolean CONCURRENCY = true
 
+// V3 - include detection of concurrent builds
+
 pipeline
 {
     agent none
