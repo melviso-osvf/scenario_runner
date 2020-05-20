@@ -46,15 +46,13 @@ pipeline
         {
             options
             {
-                lock resource: "ubuntu_gpu", skipIfLocked: true
+                lock(resource: 'ubuntu_gpu', skipIfLocked: true)
             }
             agent { label "master" }
+            steps
             {
-                steps
-                {
-                    CONCURRENCY = false
-                    println "no concurrent builds detected."
-                }
+                CONCURRENCY = false
+                println "no concurrent builds detected."
             }
         }
         stage('act on concurrency')
