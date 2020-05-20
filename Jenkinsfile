@@ -49,6 +49,18 @@ pipeline
                 }
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
+            stage('start server')
+            {
+                agent { label "master" }
+                steps
+                {
+                        script
+                        {
+                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                            jenkinsLib.StartUbuntuTestNode()
+                        }
+                }
+            }
         }
         stage('deploy')
         {
@@ -70,18 +82,6 @@ pipeline
                 {
                     stages
                     {
-                        stage('start server')
-                        {
-                            agent { label "master" }
-                            steps
-                            {
-                                script
-                                {
-                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                                    jenkinsLib.StartUbuntuTestNode()
-                                }
-                            }
-                        }
                         stage('install CARLA')
                         {
                             agent { label "slave && ubuntu && gpu && sr" }
