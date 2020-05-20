@@ -46,7 +46,7 @@ pipeline
         {
             options
             {
-                lock(resource: 'ubuntu_gpu', skipIfLocked: true)
+                lock resource: 'ubuntu_gpu', skipIfLocked: true
             }
             agent { label "master" }
             steps
