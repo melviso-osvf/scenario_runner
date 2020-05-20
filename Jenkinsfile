@@ -49,16 +49,16 @@ pipeline
                 }
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
-            stage('start server')
+        }
+        stage('start server')
+        {
+            agent { label "master" }
+            steps
             {
-                agent { label "master" }
-                steps
+                script
                 {
-                        script
-                        {
-                            jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                            jenkinsLib.StartUbuntuTestNode()
-                        }
+                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    jenkinsLib.StartUbuntuTestNode()
                 }
             }
         }
