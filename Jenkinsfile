@@ -70,7 +70,6 @@ pipeline
                         println "concurrent builds detected, prebuilding SR image."
                         stage('prebuild SR docker image')
                         {
-                            agent { label "master" }
                             steps
                             {
                                 //checkout scm
