@@ -54,7 +54,7 @@ pipeline
 	{
 		options
 		{
-			lock resource "ubuntu_gpu"
+			lock resource: "ubuntu_gpu"
 		}
 		stages
 		{
