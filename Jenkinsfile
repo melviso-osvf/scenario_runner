@@ -103,17 +103,20 @@ pipeline
                                     agent { label "master" }
                                     steps
                                     {
-                                        if ( CONCURRENCY == false )
+                                        script
                                         {
-                                            //checkout scm
-                                            sh 'docker build -t jenkins/scenario_runner .'
-                                            sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
-                                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                            sh "docker push ${ECR_REPOSITORY}"
-                                        }
-                                        else
-                                        {
-                                            println "SR docker image already built due concurrency"
+                                            if ( CONCURRENCY == false )
+                                            {
+                                                //checkout scm
+                                                sh 'docker build -t jenkins/scenario_runner .'
+                                                sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
+                                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                                                sh "docker push ${ECR_REPOSITORY}"
+                                            }
+                                            else
+                                            {
+                                                println "SR docker image already built due concurrency"
+                                            }
                                         }
                                     }
                             }
