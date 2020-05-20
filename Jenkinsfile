@@ -42,22 +42,31 @@ pipeline
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
         }
-        stage('check concurrency')
+        stage('get concurrency status')
+        {
+            options
+            {
+                lock resource: "ubuntu_gpu", skipIfLocked: true
+            }
+            agent { label "master" }
+            {
+                steps
+                {
+                    CONCURRENCY = false
+                    println "no concurrent builds detected."
+                }
+            }
+        }
+        stage('act on concurrency')
         {
             agent { label "master" }
             steps
             {
                 script
                 {
-                    lock(label: 'ubuntu_gpu', skipIfLocked: true) 
-                    {
-                        script
-                        {
-                            CONCURRENCY = false
-                        }
-                    }
                     if ( CONCURRENCY == true )
                     {
+                        println "concurrent builds detected, prebuild SR image."
                         stage('prebuild SR docker image')
                         {
                             agent { label "master" }
