@@ -47,15 +47,15 @@ pipeline
             agent { label "master" }
             steps
             {
-                lock(resource: 'ubuntu_gpu', skipIfLocked: true) 
-                {
-                    script
-                    {
-                        CONCURRENCY = false
-                    }
-                }
                 script
                 {
+                    lock(label: 'ubuntu_gpu', skipIfLocked: true) 
+                    {
+                        script
+                        {
+                            CONCURRENCY = false
+                        }
+                    }
                     if ( CONCURRENCY == true )
                     {
                         stage('prebuild SR docker image')
