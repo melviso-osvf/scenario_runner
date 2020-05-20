@@ -51,8 +51,11 @@ pipeline
             agent { label "master" }
             steps
             {
-                CONCURRENCY = false
-                println "no concurrent builds detected."
+                script
+                {
+                    CONCURRENCY = false
+                    println "no concurrent builds detected."
+                }
             }
         }
         stage('act on concurrency')
