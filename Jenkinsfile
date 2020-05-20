@@ -50,83 +50,93 @@ pipeline
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
         }
-        stage('start server')
-        {
-            agent { label "master" }
-            steps
-            {
-                script
-                {
-                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.StartUbuntuTestNode()
-                }
-            }
-        }
-        stage('deploy')
-        {
-            parallel
-            {
-                stage('build SR docker image')
-                {
-                    agent { label "master" }
-                    steps
-                    {
-                        //checkout scm
-                        sh 'docker build -t jenkins/scenario_runner .'
-                        sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
-                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                        sh "docker push ${ECR_REPOSITORY}"
-                    }
-                }
-                stage('deploy CARLA')
-                {
-                    stages
-                    {
-                        stage('install CARLA')
-                        {
-                            agent { label "slave && ubuntu && gpu && sr" }
-                            steps
-                            {
-                                println "using CARLA version ${CARLA_RELEASE}"
-                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('run test')
-        {
-        	agent { label "slave && ubuntu && gpu && sr" }
-            steps
-            {
-                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-        sleep 10
-                script
-                {
-                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                        sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
-                        sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
-                        deleteDir()
-                }
-            }
-        }
-    }
-    post
-    {
-        always
-        {
-            node('master')
-            {
-                script  
-                {
-                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                    jenkinsLib.StopUbuntuTestNode()
-                    echo 'test node stopped'
-                    sh 'docker system prune --volumes -f'
-                }
-                deleteDir()
-            }
-        }
+	stage('lock test instance')
+	{
+		options
+		{
+			lock resource: "ubuntu_gpu"
+		}
+		stages
+		{
+        		stage('start server')
+        		{
+            			agent { label "master" }
+            			steps
+            			{
+                			script
+                			{
+                    				jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    				jenkinsLib.StartUbuntuTestNode()
+                			}
+            			}
+        		}
+        		stage('deploy')
+        		{
+            			parallel
+            			{
+                			stage('build SR docker image')
+                			{
+                    				agent { label "master" }
+                    				steps
+                    				{
+                        				//checkout scm
+                        				sh 'docker build -t jenkins/scenario_runner .'
+                        				sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
+                        				sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                        				sh "docker push ${ECR_REPOSITORY}"
+                    				}
+                			}
+                			stage('deploy CARLA')
+                			{
+                    				stages
+                    				{
+                        				stage('install CARLA')
+                        				{
+                            					agent { label "slave && ubuntu && gpu && sr" }
+                            					steps
+                            					{
+                                					println "using CARLA version ${CARLA_RELEASE}"
+                                					sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
+                            					}
+                        				}
+                    				}
+                			}
+            			}
+        		}
+        		stage('run test')
+        		{
+        			agent { label "slave && ubuntu && gpu && sr" }
+            			steps
+            			{
+                			sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+        				sleep 10
+                			script
+                			{
+                        			sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                        			sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
+                        			sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                        			deleteDir()
+                			}
+            			}
+        		}
+    		}
+    		post
+    		{
+        		always
+        		{
+            			node('master')
+            			{
+                			script  
+                			{
+                    				jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
+                    				jenkinsLib.StopUbuntuTestNode()
+                    				echo 'test node stopped'
+                    				sh 'docker system prune --volumes -f'
+                			}
+                			deleteDir()
+            			}
+        		}
+		}
+	}
     }
 }
