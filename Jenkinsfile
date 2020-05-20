@@ -70,15 +70,11 @@ pipeline
                         println "concurrent builds detected, prebuilding SR image."
                         stage('prebuild SR docker image')
                         {
-                            agent { label "master" }
-                            steps
-                            {
-                                //checkout scm
-                                sh 'docker build -t jenkins/scenario_runner .'
-                                sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
-                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                sh "docker push ${ECR_REPOSITORY}"
-                            }
+                            //checkout scm
+                            sh 'docker build -t jenkins/scenario_runner .'
+                            sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
+                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                            sh "docker push ${ECR_REPOSITORY}"
                         }
                     }
                 }
