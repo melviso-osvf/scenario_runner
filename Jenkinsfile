@@ -77,55 +77,55 @@ pipeline
                                 }
                             }
                         }
-                    }
-                    stage('deploy')
-                    {
-                        parallel
+                        stage('deploy')
                         {
-                            stage('build image')
+                            parallel
                             {
-                                options
+                                stage('build image')
                                 {
-                                    lock resource: "docker_build"
-                                }
-                                agent { label "master" }
-                                steps
-                                {
-                                    script
+                                    options
                                     {
-                                        sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
-                                        sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
-                                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
-                                        sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
-                                        sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
-                                        sh 'docker system prune --volumes -f'
+                                        lock resource: "docker_build"
+                                    }
+                                    agent { label "master" }
+                                    steps
+                                    {
+                                        script
+                                        {
+                                            sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                            sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
+                                            sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                            sh 'docker system prune --volumes -f'
+                                        }
+                                    }
+                                }
+                                stage('install CARLA')
+                                {
+                                    agent { label "slave && ubuntu && gpu && sr" }
+                                    steps
+                                    {
+                                        println "using CARLA version ${CARLA_RELEASE}"
+                                        sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
                                     }
                                 }
                             }
-                            stage('install CARLA')
-                            {
-                                agent { label "slave && ubuntu && gpu && sr" }
-                                steps
-                                {
-                                    println "using CARLA version ${CARLA_RELEASE}"
-                                    sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                                }
-                            }
                         }
-                    }
-                    stage('test')
-                    {
-                        agent { label "slave && ubuntu && gpu && sr" }
-                        steps
+                        stage('test')
                         {
-                            sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                            sleep 10
-                            script
+                            agent { label "slave && ubuntu && gpu && sr" }
+                            steps
                             {
-                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
-                                sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
-                                deleteDir()
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+                                sleep 10
+                                script
+                                {
+                                    sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                                    sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
+                                    sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                                    deleteDir()
+                                }
                             }
                         }
                     }
