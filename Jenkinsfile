@@ -44,76 +44,43 @@ pipeline
                 println "using CARLA version ${CARLA_RELEASE} from ${TEST_HOST}"
             }
         }
-        stage('get concurrency status')
+        stage('reserve ubuntu gpu slot')
         {
             options
             {
-                lock resource: 'ubuntu_gpu', skipIfLocked: true
-            }
-            agent { label "master" }
-            steps
-            {
-                script
-                {
-                    CONCURRENCY = false
-                    println "no concurrent builds detected."
-                }
-            }
-        }
-        stage('act on concurrency')
-        {
-            agent { label "master" }
-            steps
-            {
-                script
-                {
-                    if ( CONCURRENCY == true )
-                    {
-                        println "concurrent builds detected, prebuilding SR image."
-                        sleep 3 //defer preference to current build
-                        stage('prebuild SR docker image')
-                        {
-                            sleep 3  // defer priority to main build
-                            lock("docker_build")
-                            {
-                                sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
-                                sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
-                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
-                                sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
-                                sh 'docker system prune --volumes -f'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('lock ubuntu_gpu instance')
-        {
-            options
-            {
-                lock resource: "ubuntu_gpu"
+                lock resource: 'ubuntu_gpu_slot', inversePrecedence: true
             }
             stages
             {
-                stage('start server')
+                stage('leader build')
                 {
-                        agent { label "master" }
-                        steps
+                    options
+                    {
+                        lock resource: 'ubuntu_gpu', skipIfLocked: true
+                    }
+                    stages
+                    {
+                        stage('start gpu slave')
                         {
-                            script
+                            agent { label "master" }
+                            steps
                             {
-                                jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                                jenkinsLib.StartUbuntuTestNode()
+                                script
+                                {
+                                    CONCURRENCY = false
+                                    aux_lib = load("/home/jenkins/aux.groovy")
+                                    jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
+                                    aux_lib.unlock("ubuntu_gpu_slot")
+                                    jenkins_lib.StartUbuntuTestNode()
+                                }
                             }
                         }
-                }
-                stage('deploy')
-                {
-                        parallel
+                        stage('deploy')
                         {
-                            stage('build SR docker image')
+                            parallel
                             {
+                                stage('build SR docker image')
+                                {
                                     options
                                     {
                                         lock resource: "docker_build"
@@ -123,70 +90,170 @@ pipeline
                                     {
                                         script
                                         {
-                                            if ( CONCURRENCY == false )
-                                            {
-                                                sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
-                                                sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
-                                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
-                                                sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
-                                                sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
-                                                sh 'docker system prune --volumes -f'
-                                            }
-                                            else
-                                            {
-                                                println "SR docker image already built due concurrency"
-                                            }
+                                            sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                            sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
+                                            sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                            sh 'docker system prune --volumes -f'
                                         }
                                     }
-                            }
-                            stage('deploy CARLA')
-                            {
+                                }
+                                stage('deploy CARLA')
+                                {
                                     stages
                                     {
                                         stage('install CARLA')
                                         {
-                                                agent { label "slave && ubuntu && gpu && sr" }
-                                                steps
-                                                {
-                                                    println "using CARLA version ${CARLA_RELEASE}"
-                                                    sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                                                }
+                                            agent { label "slave && ubuntu && gpu && sr" }
+                                            steps
+                                            {
+                                                println "using CARLA version ${CARLA_RELEASE}"
+                                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
+                                            }
                                         }
                                     }
+                                }
                             }
                         }
-                }
-                stage('run test')
-                {
-                    agent { label "slave && ubuntu && gpu && sr" }
-                        steps
+                        stage('run test')
                         {
-                            sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                            sleep 10
-                            script
+                            agent { label "slave && ubuntu && gpu && sr" }
+                            steps
                             {
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+                                sleep 10
+                                script
+                                {
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
                                     sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
                                     sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
                                     deleteDir()
+                                }
                             }
                         }
-                }
-            }
-            post
-            {
-                always
-                {
-                        node('master')
+                    }
+                    post
+                    {
+                        always
                         {
-                            script  
-                            {
-                                    jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
-                                    jenkinsLib.StopUbuntuTestNode()
-                                    echo 'test node stopped'
-                            }
-                            deleteDir()
+                                node('master')
+                                {
+                                    script  
+                                    {
+                                        lock('ubuntu_gpu_slot')                     //No more jobs enter this leader
+                                        aux_lib = load("/home/jenkins/aux.groovy")
+                                        jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
+                                        aux_lib.unlock("ubuntu_gpu")
+                                        sleep 3
+                                        lock('ubuntu_gpu')
+                                        jenkins_lib.StopUbuntuTestNode()
+                                        echo 'leader build stopped'
+                                    }
+                                    deleteDir()
+                                }
                         }
+                    }
+                }
+                stage('get ubuntu gpu slot')
+                {
+                    when
+                    {
+                        expression 
+                        { 
+                            return CONCURRENCY
+                        }
+                    }
+                    stages
+                    {
+                        stage('queued slot')
+                        {
+                            //allow other jobs to enter in queue
+                            steps
+                            {
+                                script
+                                {
+                                    aux_lib = load("/home/jenkins/aux.groovy")
+                                    aux_lib.unlock("ubuntu_gpu_slot")
+                                }
+                            }
+                        }
+                        stage('deploy')
+                        {
+                            options
+                            {
+                                lock resource: 'ubuntu_gpu', inversePrecedence: true
+                            }
+                            parallel
+                            {
+                                stage('build SR docker image')
+                                {
+                                    options
+                                    {
+                                        lock resource: "docker_build"
+                                    }
+                                    agent { label "master" }
+                                    steps
+                                    {
+                                        script
+                                        {
+                                            sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                            sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
+                                            sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                            sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                            sh 'docker system prune --volumes -f'
+                                        }
+                                    }
+                                }
+                                stage('deploy CARLA')
+                                {
+                                    stages
+                                    {
+                                        stage('install CARLA')
+                                        {
+                                            agent { label "slave && ubuntu && gpu && sr" }
+                                            steps
+                                            {
+                                                println "using CARLA version ${CARLA_RELEASE}"
+                                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage('run test')
+                        {
+                            agent { label "slave && ubuntu && gpu && sr" }
+                            steps
+                            {
+                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+                                sleep 10
+                                script
+                                {
+                                    sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                                    sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
+                                    sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                                    deleteDir()
+                                }
+                            }
+                        }
+                    }
+                    post
+                    {
+                        always
+                        {
+                            node('master')
+                            {
+                                script  
+                                {
+                                    echo 'end'
+                                    deleteDir()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
