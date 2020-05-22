@@ -171,6 +171,7 @@ pipeline
                         stage('queued slot')
                         {
                             //allow other jobs to enter in queue
+                            agent { label "master" }
                             steps
                             {
                                 script
