@@ -70,13 +70,19 @@ pipeline
                     if ( CONCURRENCY == true )
                     {
                         println "concurrent builds detected, prebuilding SR image."
+                        sleep 3 //defer preference to current build
                         stage('prebuild SR docker image')
                         {
-                            //checkout scm
-                            sh 'docker build -t jenkins/scenario_runner .'
-                            sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
-                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                            sh "docker push ${ECR_REPOSITORY}"
+                            sleep 3  // defer priority to main build
+                            lock("docker_build")
+                            {
+                                sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                                sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                sh 'docker system prune --volumes -f'
+                            }
                         }
                     }
                 }
@@ -108,6 +114,10 @@ pipeline
                         {
                             stage('build SR docker image')
                             {
+                                    options
+                                    {
+                                        lock resource: "docker_build"
+                                    }
                                     agent { label "master" }
                                     steps
                                     {
@@ -115,11 +125,12 @@ pipeline
                                         {
                                             if ( CONCURRENCY == false )
                                             {
-                                                //checkout scm
-                                                sh 'docker build -t jenkins/scenario_runner .'
-                                                sh "docker tag jenkins/scenario_runner ${ECR_REPOSITORY}:${COMMIT}"
-                                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                                sh "docker push ${ECR_REPOSITORY}"
+                                                sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                                sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
+                                                sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                                sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                                sh 'docker system prune --volumes -f'
                                             }
                                             else
                                             {
@@ -151,7 +162,7 @@ pipeline
                         steps
                         {
                             sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                        sleep 10
+                            sleep 10
                             script
                             {
                                     sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
@@ -173,7 +184,6 @@ pipeline
                                     jenkinsLib = load("/home/jenkins/scenario_runner.groovy")
                                     jenkinsLib.StopUbuntuTestNode()
                                     echo 'test node stopped'
-                                    sh 'docker system prune --volumes -f'
                             }
                             deleteDir()
                         }
