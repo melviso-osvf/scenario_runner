@@ -77,61 +77,55 @@ pipeline
                                 }
                             }
                         }
-                        stage('deploy')
+                    }
+                    stage('deploy')
+                    {
+                        parallel
                         {
-                            parallel
+                            stage('build image')
                             {
-                                stage('build SR docker image')
+                                options
                                 {
-                                    options
-                                    {
-                                        lock resource: "docker_build"
-                                    }
-                                    agent { label "master" }
-                                    steps
-                                    {
-                                        script
-                                        {
-                                            sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
-                                            sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
-                                            sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
-                                            sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
-                                            sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
-                                            sh 'docker system prune --volumes -f'
-                                        }
-                                    }
+                                    lock resource: "docker_build"
                                 }
-                                stage('deploy CARLA')
+                                agent { label "master" }
+                                steps
                                 {
-                                    stages
+                                    script
                                     {
-                                        stage('install CARLA')
-                                        {
-                                            agent { label "slave && ubuntu && gpu && sr" }
-                                            steps
-                                            {
-                                                println "using CARLA version ${CARLA_RELEASE}"
-                                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                                            }
-                                        }
+                                        sh "docker build -t jenkins/scenario_runner:${COMMIT} ."
+                                        sh "docker tag jenkins/scenario_runner:${COMMIT} ${ECR_REPOSITORY}:${COMMIT}"
+                                        sh '$(aws ecr get-login | sed \'s/ -e none//g\' )'
+                                        sh "docker push ${ECR_REPOSITORY}:${COMMIT}"
+                                        sh "docker image rmi -f \"\$(docker images -q ${ECR_REPOSITORY}:${COMMIT})\""
+                                        sh 'docker system prune --volumes -f'
                                     }
                                 }
                             }
-                        }
-                        stage('run test')
-                        {
-                            agent { label "slave && ubuntu && gpu && sr" }
-                            steps
+                            stage('install CARLA')
                             {
-                                sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
-                                sleep 10
-                                script
+                                agent { label "slave && ubuntu && gpu && sr" }
+                                steps
                                 {
-                                    sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
-                                    sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
-                                    sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
-                                    deleteDir()
+                                    println "using CARLA version ${CARLA_RELEASE}"
+                                    sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
                                 }
+                            }
+                        }
+                    }
+                    stage('test')
+                    {
+                        agent { label "slave && ubuntu && gpu && sr" }
+                        steps
+                        {
+                            sh 'DISPLAY= ./CarlaUE4.sh -opengl -nosound > CarlaUE4.log&'
+                            sleep 10
+                            script
+                            {
+                                sh '$(aws ecr get-login | sed \'s/ -e none//g\' )' 
+                                sh "docker pull ${ECR_REPOSITORY}:${COMMIT}"
+                                sh "docker container run --rm --network host -e LANG=C.UTF-8 \"${ECR_REPOSITORY}:${COMMIT}\" -c \"python3 scenario_runner.py --scenario FollowLeadingVehicle_1 --debug --output --reloadWorld \""
+                                deleteDir()
                             }
                         }
                     }
@@ -144,6 +138,10 @@ pipeline
                         { 
                             return CONCURRENCY
                         }
+                    }
+                    options
+                    {
+                        lock resource: 'ubuntu_gpu', inversePrecedence: true
                     }
                     stages
                     {
@@ -171,28 +169,18 @@ pipeline
                                         }
                                     }
                                 }
-                                stage('deploy CARLA')
+                                stage('install CARLA')
                                 {
-                                    options
+                                    agent { label "slave && ubuntu && gpu && sr" }
+                                    steps
                                     {
-                                        lock resource: 'ubuntu_gpu', inversePrecedence: true
-                                    }
-                                    stages
-                                    {
-                                        stage('install CARLA')
-                                        {
-                                            agent { label "slave && ubuntu && gpu && sr" }
-                                            steps
-                                            {
-                                                println "using CARLA version ${CARLA_RELEASE}"
-                                                sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
-                                            }
-                                        }
+                                        println "using CARLA version ${CARLA_RELEASE}"
+                                        sh "wget -qO- ${CARLA_HOST}/${CARLA_RELEASE}.tar.gz | tar -xzv -C ."
                                     }
                                 }
                             }
                         }
-                        stage('run test')
+                        stage('test')
                         {
                             agent { label "slave && ubuntu && gpu && sr" }
                             steps
