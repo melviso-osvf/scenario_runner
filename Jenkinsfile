@@ -67,9 +67,11 @@ pipeline
                             {
                                 script
                                 {
+                                    println "No concurrency or leader buid. Starting gpu slave."
                                     CONCURRENCY = false
                                     aux_lib = load("/home/jenkins/aux.groovy")
                                     jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
+                                    println "open queue entering."
                                     aux_lib.unlock("ubuntu_gpu_slot")
                                     jenkins_lib.StartUbuntuTestNode()
                                 }
