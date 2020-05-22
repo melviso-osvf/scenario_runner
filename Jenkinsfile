@@ -143,14 +143,16 @@ pipeline
                                 {
                                     script  
                                     {
-                                        lock('ubuntu_gpu_slot')                     //No more jobs enter this leader
-                                        aux_lib = load("/home/jenkins/aux.groovy")
-                                        jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
-                                        aux_lib.unlock("ubuntu_gpu")
-                                        sleep 3
-                                        lock('ubuntu_gpu')
-                                        jenkins_lib.StopUbuntuTestNode()
-                                        echo 'leader build stopped'
+                                        lock('ubuntu_gpu_slot')
+                                        {
+                                            aux_lib = load("/home/jenkins/aux.groovy")
+                                            jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
+                                            aux_lib.unlock("ubuntu_gpu")
+                                            sleep 3
+                                            lock('ubuntu_gpu')
+                                            jenkins_lib.StopUbuntuTestNode()
+                                            echo 'leader build stopped'
+                                        }
                                     }
                                     deleteDir()
                                 }
