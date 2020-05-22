@@ -135,30 +135,6 @@ pipeline
                             }
                         }
                     }
-                    post
-                    {
-                        always
-                        {
-                                node('master')
-                                {
-                                    script  
-                                    {
-                                        aux_lib = load("/home/jenkins/aux.groovy")
-                                        aux_lib.unlock("ubuntu_gpu")
-                                        lock('ubuntu_gpu_slot')
-                                        {
-                                            jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
-                                            lock('ubuntu_gpu')
-                                            {
-                                                jenkins_lib.StopUbuntuTestNode()
-                                                echo 'leader build stopped'
-                                            }
-                                        }
-                                    }
-                                    deleteDir()
-                                }
-                        }
-                    }
                 }
                 stage('get ubuntu gpu slot')
                 {
@@ -249,6 +225,31 @@ pipeline
                     }
                 }
             }
+        }
+    }
+    post
+    {
+        always
+        {
+                node('master')
+                {
+                    script  
+                    {
+                        if ( CONCURRENCY == false )
+                        {
+                            lock('ubuntu_gpu_slot')
+                            {
+                                jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
+                                lock('ubuntu_gpu')
+                                {
+                                    jenkins_lib.StopUbuntuTestNode()
+                                    echo 'leader build stopped'
+                                }
+                            }
+                        }
+                    }
+                    deleteDir()
+                }
         }
     }
 }
