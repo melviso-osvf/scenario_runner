@@ -143,12 +143,11 @@ pipeline
                                 {
                                     script  
                                     {
+                                        aux_lib = load("/home/jenkins/aux.groovy")
+                                        aux_lib.unlock("ubuntu_gpu")
                                         lock('ubuntu_gpu_slot')
                                         {
-                                            aux_lib = load("/home/jenkins/aux.groovy")
                                             jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
-                                            aux_lib.unlock("ubuntu_gpu")
-                                            sleep 10
                                             lock('ubuntu_gpu')
                                             {
                                                 jenkins_lib.StopUbuntuTestNode()
@@ -172,19 +171,6 @@ pipeline
                     }
                     stages
                     {
-                        stage('queued slot')
-                        {
-                            //allow other jobs to enter in queue
-                            agent { label "master" }
-                            steps
-                            {
-                                script
-                                {
-                                    aux_lib = load("/home/jenkins/aux.groovy")
-                                    aux_lib.unlock("ubuntu_gpu_slot")
-                                }
-                            }
-                        }
                         stage('deploy')
                         {
                             parallel
