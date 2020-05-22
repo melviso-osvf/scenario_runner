@@ -148,10 +148,12 @@ pipeline
                                             aux_lib = load("/home/jenkins/aux.groovy")
                                             jenkins_lib = load("/home/jenkins/scenario_runner.groovy")
                                             aux_lib.unlock("ubuntu_gpu")
-                                            sleep 3
+                                            sleep 10
                                             lock('ubuntu_gpu')
-                                            jenkins_lib.StopUbuntuTestNode()
-                                            echo 'leader build stopped'
+                                            {
+                                                jenkins_lib.StopUbuntuTestNode()
+                                                echo 'leader build stopped'
+                                            }
                                         }
                                     }
                                     deleteDir()
@@ -185,10 +187,6 @@ pipeline
                         }
                         stage('deploy')
                         {
-                            options
-                            {
-                                lock resource: 'ubuntu_gpu', inversePrecedence: true
-                            }
                             parallel
                             {
                                 stage('build SR docker image')
@@ -213,6 +211,10 @@ pipeline
                                 }
                                 stage('deploy CARLA')
                                 {
+                                    options
+                                    {
+                                        lock resource: 'ubuntu_gpu', inversePrecedence: true
+                                    }
                                     stages
                                     {
                                         stage('install CARLA')
